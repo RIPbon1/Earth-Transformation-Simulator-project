@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Earth Transformation Simulator - 3D Computer Graphics Mini-Project</title>
+  <meta name="description" content="Interactive 3D Computer Graphics application demonstrating 4x4 matrix geometric transformations (Translation, Rotation, Scaling, Shearing) on Earth shapes.">
+  
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- Import map for Three.js & OrbitControls via CDN for zero-setup execution -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/examples/jsm/controls/OrbitControls.js": "https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js"
+      }
+    }
+  </script>
+</head>
+<body>
+
+  <!-- 3D Canvas Background Viewport -->
+  <div id="canvas-container"></div>
+
+  <!-- Top App Header -->
+  <header class="app-header">
+    <div class="logo-badge">🌍</div>
+    <div class="app-title">
+      <h1>Earth Transformation Simulator</h1>
+      <p>Computer Graphics • 4x4 Homogeneous Matrix Transformations</p>
+    </div>
+  </header>
+
+  <!-- Main Grid Layout Overlay -->
+  <div class="ui-layout">
+
+    <!-- LEFT SIDEBAR: Controls & Sliders -->
+    <aside class="sidebar-panel">
+      <div class="panel-header">
+        <h2><span>⚙️</span> Controls</h2>
+        <button id="btn-info" class="btn-action" title="View Matrix Math Formulas" style="padding:4px 10px; font-size:0.75rem;">📚 Theory</button>
+      </div>
+
+      <div class="panel-body">
+        
+        <!-- Shape Selection -->
+        <div class="control-card">
+          <div class="card-title">Representations</div>
+          <div class="shape-selector">
+            <button class="btn-shape active" data-shape="sphere">
+              <span class="icon">🌐</span>
+              <span>Sphere</span>
+            </button>
+            <button class="btn-shape" data-shape="circle">
+              <span class="icon">⭕</span>
+              <span>2D Circle</span>
+            </button>
+            <button class="btn-shape" data-shape="cube">
+              <span class="icon">🧊</span>
+              <span>Cube</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Transformation Tabs -->
+        <div class="control-card">
+          <div class="card-title">Transformations</div>
+          
+          <div class="trans-tabs">
+            <button class="tab-btn active" data-tab="translation">Translate</button>
+            <button class="tab-btn" data-tab="rotation">Rotate</button>
+            <button class="tab-btn" data-tab="scale">Scale</button>
+            <button class="tab-btn" data-tab="shear">Shear</button>
+          </div>
+
+          <!-- TAB 1: TRANSLATION -->
+          <div id="tab-translation" class="tab-content active">
+            <div class="control-row">
+              <span class="axis-label axis-x">X</span>
+              <input type="range" id="slider-tx" min="-10" max="10" step="0.1" value="0">
+              <span id="val-tx" class="val-input">0.0</span>
+            </div>
+            <div class="control-row">
+              <span class="axis-label axis-y">Y</span>
+              <input type="range" id="slider-ty" min="-10" max="10" step="0.1" value="0">
+              <span id="val-ty" class="val-input">0.0</span>
+            </div>
+            <div class="control-row">
+              <span class="axis-label axis-z">Z</span>
+              <input type="range" id="slider-tz" min="-10" max="10" step="0.1" value="0">
+              <span id="val-tz" class="val-input">0.0</span>
+            </div>
+          </div>
+
+          <!-- TAB 2: ROTATION -->
+          <div id="tab-rotation" class="tab-content">
+            <div class="control-row">
+              <span class="axis-label axis-x">R<sub>x</sub></span>
+              <input type="range" id="slider-rx" min="0" max="360" step="1" value="0">
+              <span id="val-rx" class="val-input">0.0</span>
+            </div>
+            <div class="control-row">
+              <span class="axis-label axis-y">R<sub>y</sub></span>
+              <input type="range" id="slider-ry" min="0" max="360" step="1" value="0">
+              <span id="val-ry" class="val-input">0.0</span>
+            </div>
+            <div class="control-row">
+              <span class="axis-label axis-z">R<sub>z</sub></span>
+              <input type="range" id="slider-rz" min="0" max="360" step="1" value="0">
+              <span id="val-rz" class="val-input">0.0</span>
+            </div>
+          </div>
+
+          <!-- TAB 3: SCALING -->
+          <div id="tab-scale" class="tab-content">
+            <div class="control-row">
+              <span class="axis-label axis-x">S<sub>x</sub></span>
+              <input type="range" id="slider-sx" min="0.1" max="3.0" step="0.05" value="1.0">
+              <span id="val-sx" class="val-input">1.00</span>
+            </div>
+            <div class="control-row">
+              <span class="axis-label axis-y">S<sub>y</sub></span>
+              <input type="range" id="slider-sy" min="0.1" max="3.0" step="0.05" value="1.0">
+              <span id="val-sy" class="val-input">1.00</span>
+            </div>
+            <div class="control-row">
+              <span class="axis-label axis-z">S<sub>z</sub></span>
+              <input type="range" id="slider-sz" min="0.1" max="3.0" step="0.05" value="1.0">
+              <span id="val-sz" class="val-input">1.00</span>
+            </div>
+          </div>
+
+          <!-- TAB 4: SHEARING -->
+          <div id="tab-shear" class="tab-content">
+            <div class="control-row">
+              <span class="axis-label axis-xy">Sh<sub>xy</sub></span>
+              <input type="range" id="slider-sh-xy" min="-2.0" max="2.0" step="0.1" value="0">
+              <span id="val-sh-xy" class="val-input">0.0</span>
+            </div>
+            <div class="control-row">
+              <span class="axis-label axis-xy">Sh<sub>xz</sub></span>
+              <input type="range" id="slider-sh-xz" min="-2.0" max="2.0" step="0.1" value="0">
+              <span id="val-sh-xz" class="val-input">0.0</span>
+            </div>
+            <div class="control-row">
+              <span class="axis-label axis-xy">Sh<sub>yx</sub></span>
+              <input type="range" id="slider-sh-yx" min="-2.0" max="2.0" step="0.1" value="0">
+              <span id="val-sh-yx" class="val-input">0.0</span>
+            </div>
+            <div class="control-row">
+              <span class="axis-label axis-xy">Sh<sub>yz</sub></span>
+              <input type="range" id="slider-sh-yz" min="-2.0" max="2.0" step="0.1" value="0">
+              <span id="val-sh-yz" class="val-input">0.0</span>
+            </div>
+            <div class="control-row">
+              <span class="axis-label axis-xy">Sh<sub>zx</sub></span>
+              <input type="range" id="slider-sh-zx" min="-2.0" max="2.0" step="0.1" value="0">
+              <span id="val-sh-zx" class="val-input">0.0</span>
+            </div>
+            <div class="control-row">
+              <span class="axis-label axis-xy">Sh<sub>zy</sub></span>
+              <input type="range" id="slider-sh-zy" min="-2.0" max="2.0" step="0.1" value="0">
+              <span id="val-sh-zy" class="val-input">0.0</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Presets Card -->
+        <div class="control-card">
+          <div class="card-title">Demo Presets</div>
+          <select id="preset-select" class="preset-select">
+            <option value="default">Default Globe (Identity)</option>
+            <option value="sheared-cube">Sheared Cube (Parallelepiped)</option>
+            <option value="satellite-disc">Flattened Satellite Disc</option>
+            <option value="orbit">Translational Orbit</option>
+            <option value="extreme-combo">Full Combo Matrix (T + R + S + Sh)</option>
+          </select>
+        </div>
+
+        <!-- Animation Controls -->
+        <div class="control-card">
+          <div class="card-title">Animation Settings</div>
+          <div class="action-grid" style="margin-bottom: 12px;">
+            <button id="btn-autorotate" class="btn-action active">
+              <span>⏸</span> Auto Rotate
+            </button>
+            <button id="btn-reset" class="btn-action btn-danger">
+              <span>↺</span> Reset All
+            </button>
+          </div>
+          <div class="control-row">
+            <span class="axis-label" style="font-size:0.75rem;">Speed</span>
+            <input type="range" id="slider-speed" min="0.1" max="5.0" step="0.1" value="1.0">
+            <span id="val-speed" class="val-input">1.0x</span>
+          </div>
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- CENTER SPAN (Empty space for 3D Viewport interaction) -->
+    <div></div>
+
+    <!-- RIGHT SIDEBAR: Real-time Matrix Inspector -->
+    <aside class="sidebar-panel">
+      <div class="panel-header">
+        <h2><span>🧮</span> Matrix Inspector</h2>
+        <span style="font-family:var(--font-mono); font-size:0.75rem; color:var(--accent-cyan);">4x4 Homogeneous</span>
+      </div>
+
+      <div class="panel-body">
+
+        <!-- 4x4 Grid Matrix Display -->
+        <div class="matrix-container">
+          <div class="matrix-header-info">
+            <span>Resultant Matrix [M<sub>total</sub>]</span>
+            <span style="color:var(--text-muted);">T · R · Sh · S</span>
+          </div>
+
+          <div class="matrix-grid-4x4" id="matrix-grid">
+            <div class="matrix-cell">1.00</div><div class="matrix-cell">0.00</div><div class="matrix-cell">0.00</div><div class="matrix-cell highlight-t">0.00</div>
+            <div class="matrix-cell">0.00</div><div class="matrix-cell">1.00</div><div class="matrix-cell">0.00</div><div class="matrix-cell highlight-t">0.00</div>
+            <div class="matrix-cell">0.00</div><div class="matrix-cell">0.00</div><div class="matrix-cell">1.00</div><div class="matrix-cell highlight-t">0.00</div>
+            <div class="matrix-cell">0.00</div><div class="matrix-cell">0.00</div><div class="matrix-cell">0.00</div><div class="matrix-cell">1.00</div>
+          </div>
+
+          <!-- Formula Step Explanation -->
+          <div class="formula-box">
+            M<sub>total</sub> = <span class="formula-highlight">T</span>(t<sub>x</sub>,t<sub>y</sub>,t<sub>z</sub>) × <span style="color:var(--accent-green);">R</span>(θ) × <span style="color:var(--accent-rose);">Sh</span>(sh) × <span style="color:var(--accent-amber);">S</span>(s<sub>x</sub>,s<sub>y</sub>,s<sub>z</sub>)
+          </div>
+        </div>
+
+        <!-- Point Transformation Calculator -->
+        <div class="control-card">
+          <div class="card-title">Point Vertex Transformation</div>
+          <div class="coord-box">
+            <div class="coord-row">
+              <span style="color:var(--text-muted);">Initial Point P</span>
+              <span id="coord-input" style="color:var(--accent-amber);">(1.00, 1.00, 1.00)</span>
+            </div>
+            <div class="coord-row">
+              <span style="color:var(--text-muted);">Transformed P'</span>
+              <span id="coord-output" style="color:var(--accent-cyan);">(1.00, 1.00, 1.00)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sub-matrices Decomposer View -->
+        <div class="control-card">
+          <div class="card-title">Component Matrices breakdown</div>
+          <div id="sub-matrices-container" class="sub-matrices">
+            <!-- Dynamically populated by JS -->
+          </div>
+        </div>
+
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- Bottom Overlay Status Bar -->
+  <footer class="status-bar">
+    <div class="status-item">
+      <span>Shape:</span>
+      <span id="status-shape" class="status-value">SPHERE</span>
+    </div>
+    <div class="status-divider"></div>
+    <div class="status-item">
+      <span>Volume Det(M<sub>3x3</sub>):</span>
+      <span id="status-det" class="status-value">1.000</span>
+    </div>
+    <div class="status-divider"></div>
+    <div class="status-item">
+      <span>FPS:</span>
+      <span class="status-value" style="color:var(--accent-green);">60</span>
+    </div>
+  </footer>
+
+  <!-- Educational Theory & Math Modal -->
+  <div id="modal-info" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Mathematical Theory & Matrix Formulations</h2>
+        <button id="modal-close" class="close-btn">&times;</button>
+      </div>
+
+      <div class="math-expl-section">
+        <h3>1. Homogeneous Coordinates</h3>
+        <p>In 3D Computer Graphics, points are represented as 4-element column vectors $[x, y, z, 1]^T$ to allow translation to be expressed as matrix multiplication alongside scaling, rotation, and shearing.</p>
+      </div>
+
+      <div class="math-expl-section">
+        <h3>2. Fundamental 4x4 Transformation Matrices</h3>
+        
+        <div class="math-formula-card">
+          <strong>Translation Matrix T(t<sub>x</sub>, t<sub>y</sub>, t<sub>z</sub>):</strong><br>
+          [ 1  0  0  t<sub>x</sub> ]<br>
+          [ 0  1  0  t<sub>y</sub> ]<br>
+          [ 0  0  1  t<sub>z</sub> ]<br>
+          [ 0  0  0   1  ]
+        </div>
+
+        <div class="math-formula-card">
+          <strong>Scaling Matrix S(s<sub>x</sub>, s<sub>y</sub>, s<sub>z</sub>):</strong><br>
+          [ s<sub>x</sub>  0    0   0 ]<br>
+          [  0  s<sub>y</sub>   0   0 ]<br>
+          [  0   0   s<sub>z</sub>  0 ]<br>
+          [  0   0    0   1 ]
+        </div>
+
+        <div class="math-formula-card">
+          <strong>Shearing Matrix Sh(sh<sub>xy</sub>, sh<sub>xz</sub>, ...):</strong><br>
+          [   1   sh<sub>xy</sub> sh<sub>xz</sub>  0 ]<br>
+          [ sh<sub>yx</sub>   1   sh<sub>yz</sub>  0 ]<br>
+          [ sh<sub>zx</sub> sh<sub>zy</sub>   1    0 ]<br>
+          [   0     0     0    1 ]
+        </div>
+      </div>
+
+      <div class="math-expl-section">
+        <h3>3. Matrix Composition & Non-Commutativity</h3>
+        <p>Matrix multiplication is non-commutative ($A \times B \neq B \times A$). Applying scaling before translation yields a different spatial result than applying translation before scaling. In this simulator, transformations are multiplied in standard graphics order:</p>
+        <div class="math-formula-card" style="text-align:center;">
+          M<sub>final</sub> = T · R<sub>z</sub> · R<sub>y</sub> · R<sub>x</sub> · Sh · S
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
